@@ -20,6 +20,9 @@ public class PlayerControllerScript : MonoBehaviour
     private Transform _GroundCheck;
 
     [SerializeField]
+    private float _SlopeCheckDistance = 1f;
+
+    [SerializeField]
     LayerMask _GroundLayer;
 
     private readonly float _GroundCheckRadius = 0.2f;
@@ -34,6 +37,12 @@ public class PlayerControllerScript : MonoBehaviour
     private bool _IsGrounded = false;
     private float _JumpTimerCounter = 0;
     private bool _IsJumping = false;
+
+    private bool _IsOnSlop;
+    private float _SlopDownAngle;
+    private float _SlopDownAngleOld;    
+    private float _SlopSideAngle;
+    private Vector2 _SlopeNormalPerpendicular;
 
     private void Awake()
     {
@@ -65,6 +74,7 @@ public class PlayerControllerScript : MonoBehaviour
 
     private void FixedUpdate()
     {
+        SlopeCheck();
         HandleHorizontalMovement();
         HandleJump();
     }
@@ -87,7 +97,23 @@ public class PlayerControllerScript : MonoBehaviour
 
     private void HandleHorizontalMovement()
     {
-        _RigidBody.velocity = new Vector2(_Direction * _Speed, _RigidBody.velocity.y);
+        //_RigidBody.velocity = new Vector2(_Direction * _Speed, _RigidBody.velocity.y);
+
+        // Debug.Log($"_IsGrounded: {_IsGrounded} - _IsOnSlop: {_IsOnSlop}");
+        if(_IsGrounded && !_IsOnSlop)
+        {
+            _RigidBody.velocity = new Vector2(_Direction * _Speed, 0f);
+        }
+        else if(_IsGrounded && _IsOnSlop)
+        {
+            _RigidBody.velocity = new Vector2(
+                _Speed * _SlopeNormalPerpendicular.x * (-_Direction), 
+                _Speed * _SlopeNormalPerpendicular.y * (-_Direction));
+        }
+        else if(!_IsGrounded)
+        {
+            _RigidBody.velocity = new Vector2(_Direction * _Speed, _RigidBody.velocity.y);
+        }
     }
 
     private void HandleJump()
@@ -116,8 +142,6 @@ public class PlayerControllerScript : MonoBehaviour
 
         if (_JumpIsReleased)
             _IsJumping = false;
-
-        //Debug.Log($"FixedUpdate === _JumpWasPressed: {_JumpWasPressed} - _IsGrounded: {_IsGrounded}");
     }
 
     private void GroundCheck()
@@ -129,5 +153,53 @@ public class PlayerControllerScript : MonoBehaviour
     private void Jump()
     {
         _RigidBody.velocity = new Vector2(_RigidBody.velocity.x, Vector2.up.y * _JumpPower);
+    }
+
+    private void SlopeCheck()
+    {
+        SlopeCheckHorizontal();
+        SlopeCheckVertical();
+    }
+
+    private void SlopeCheckHorizontal()
+    {
+        RaycastHit2D slopeHitFront = Physics2D.Raycast(_GroundCheck.position, Vector2.right, _SlopeCheckDistance, _GroundLayer);
+        RaycastHit2D slopeHitBack = Physics2D.Raycast(_GroundCheck.position, -Vector2.right, _SlopeCheckDistance, _GroundLayer);
+
+        if(slopeHitFront)
+        {
+            _IsOnSlop = true;
+            _SlopSideAngle = Vector2.Angle(slopeHitFront.normal, Vector2.up);
+        }
+        else if(slopeHitBack)
+        {
+            _IsOnSlop = true;
+            _SlopSideAngle = Vector2.Angle(slopeHitBack.normal, Vector2.up);
+        }
+        else
+        {
+            _IsOnSlop = false;
+            _SlopSideAngle = 0;
+        }
+    }
+
+    private void SlopeCheckVertical()
+    {
+        RaycastHit2D hit = Physics2D.Raycast(_GroundCheck.position, Vector2.down, _SlopeCheckDistance, _GroundLayer);
+        if(hit)
+        {
+            _SlopeNormalPerpendicular = Vector2.Perpendicular(hit.normal).normalized;
+            _SlopDownAngle = Vector2.Angle(hit.normal, Vector2.up);
+
+            if(_SlopDownAngle != _SlopDownAngleOld)
+            {
+                _IsOnSlop = true;
+            }
+
+            _SlopDownAngleOld = _SlopDownAngle;
+
+            Debug.DrawRay(hit.point, hit.normal, Color.green);
+            Debug.DrawRay(hit.point, _SlopeNormalPerpendicular, Color.red);
+        }
     }
 }
