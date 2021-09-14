@@ -59,6 +59,8 @@ public class PlayerControllerScript : MonoBehaviour
 
         HandleFlip();
         HandleAnimation();
+
+        //Debug.Log($"Update === _JumpWasPressed: {_JumpWasPressed} - _IsGrounded: {_IsGrounded}");
     }
 
     private void FixedUpdate()
@@ -114,6 +116,8 @@ public class PlayerControllerScript : MonoBehaviour
 
         if (_JumpIsReleased)
             _IsJumping = false;
+
+        //Debug.Log($"FixedUpdate === _JumpWasPressed: {_JumpWasPressed} - _IsGrounded: {_IsGrounded}");
     }
 
     private void GroundCheck()
