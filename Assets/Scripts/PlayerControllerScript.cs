@@ -30,6 +30,7 @@ public class PlayerControllerScript : MonoBehaviour
     private SpriteRenderer _SpriteRenderer;
     private Rigidbody2D _RigidBody;
     private Animator _Animator;
+    private CapsuleCollider2D _CapsuleCollider;
     private float _Direction;
     private bool _JumpWasPressed;
     private bool _JumpIsBeingHold;
@@ -50,6 +51,7 @@ public class PlayerControllerScript : MonoBehaviour
         _RigidBody = GetComponent<Rigidbody2D>();
         _SpriteRenderer = GetComponent<SpriteRenderer>();
         _Animator = GetComponent<Animator>();
+        _CapsuleCollider = GetComponent<CapsuleCollider2D>();
     }
 
     // Start is called before the first frame update
@@ -144,10 +146,19 @@ public class PlayerControllerScript : MonoBehaviour
             _IsJumping = false;
     }
 
-    private void GroundCheck()
+    private void GroundCheckLegacy()
     {
         Collider2D[] colliders = Physics2D.OverlapCircleAll(_GroundCheck.position, _GroundCheckRadius, _GroundLayer);
         _IsGrounded = colliders.Any();
+    }
+
+    private void GroundCheck()
+    {
+        var bounds = _CapsuleCollider.bounds;
+        var size = new Vector3(bounds.size.x - 0.1f, bounds.size.y, bounds.size.z);
+
+        RaycastHit2D rayCastHit = Physics2D.BoxCast(bounds.center, size, 0f, Vector2.down, _GroundCheckRadius, _GroundLayer);
+        _IsGrounded = (rayCastHit.collider != null);
     }
 
     private void Jump()
