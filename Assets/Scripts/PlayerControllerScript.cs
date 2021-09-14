@@ -14,6 +14,9 @@ public class PlayerControllerScript : MonoBehaviour
     private float _JumpPower = 6;
 
     [SerializeField]
+    private float _JumpTimer = 1.2f;
+
+    [SerializeField]
     private Transform _GroundCheck;
 
     [SerializeField]
@@ -25,11 +28,16 @@ public class PlayerControllerScript : MonoBehaviour
     private Rigidbody2D _RigidBody;
     private Animator _Animator;
     private float _Direction;
-    private bool _JumpIsPressed;
+    private bool _JumpWasPressed;
+    private bool _JumpIsBeingHold;
+    private bool _JumpIsReleased;
     private bool _IsGrounded = false;
+    private float _JumpTimerCounter = 0;
+    private bool _IsJumping = false;
 
     private void Awake()
     {
+        _JumpTimerCounter = _JumpTimer;
         _RigidBody = GetComponent<Rigidbody2D>();
         _SpriteRenderer = GetComponent<SpriteRenderer>();
         _Animator = GetComponent<Animator>();
@@ -45,7 +53,10 @@ public class PlayerControllerScript : MonoBehaviour
     private void Update()
     {
         _Direction = Input.GetAxisRaw("Horizontal");
-        _JumpIsPressed = Input.GetButton("Jump");
+        _JumpWasPressed = Input.GetButtonDown("Jump");
+        _JumpIsReleased = Input.GetButtonUp("Jump");
+        _JumpIsBeingHold = Input.GetButton("Jump");
+
         HandleFlip();
         HandleAnimation();
     }
@@ -80,13 +91,39 @@ public class PlayerControllerScript : MonoBehaviour
     private void HandleJump()
     {
         GroundCheck();
-        if (_JumpIsPressed && _IsGrounded)
-            _RigidBody.velocity = Vector2.up * _JumpPower;
+
+        if (_JumpWasPressed && _IsGrounded)
+        {
+            _IsJumping = true;
+            _JumpTimerCounter = _JumpTimer;
+            Jump();
+        }
+
+        if (_JumpIsBeingHold && _IsJumping)
+        {
+            if (_JumpTimerCounter > 0)
+            {
+                Jump();
+                _JumpTimerCounter -= Time.deltaTime;
+            }
+            else
+            {
+                _IsJumping = false;
+            }
+        }
+
+        if (_JumpIsReleased)
+            _IsJumping = false;
     }
 
     private void GroundCheck()
     {
         Collider2D[] colliders = Physics2D.OverlapCircleAll(_GroundCheck.position, _GroundCheckRadius, _GroundLayer);
         _IsGrounded = colliders.Any();
+    }
+
+    private void Jump()
+    {
+        _RigidBody.velocity = new Vector2(_RigidBody.velocity.x, Vector2.up.y * _JumpPower);
     }
 }
