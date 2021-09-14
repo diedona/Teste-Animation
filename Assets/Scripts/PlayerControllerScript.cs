@@ -20,7 +20,7 @@ public class PlayerControllerScript : MonoBehaviour
     private Transform _GroundCheck;
 
     [SerializeField]
-    private float _SlopeCheckDistance = 1f;
+    private float _SlopeCheckDistance = 0.1f;
 
     [SerializeField]
     LayerMask _GroundLayer;
