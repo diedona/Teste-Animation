@@ -80,10 +80,35 @@ public class PlayerControllerScript : MonoBehaviour
     private void HandleJump()
     {
         _JumpWasPressed = Input.GetButtonDown("Jump");
+        _JumpIsBeingHold = Input.GetButton("Jump");
+        _JumpIsReleased = Input.GetButtonUp("Jump");
+
         GroundCheck();
 
         if(_JumpWasPressed && _IsGrounded)
+        {
             Jump();
+            _IsJumping = true;
+            _JumpTimerCounter = _JumpTimer;
+        }
+
+        if(_JumpIsBeingHold && _IsJumping)
+        {
+            if(_JumpTimerCounter > 0)
+            {
+                Jump();
+                _JumpTimerCounter -= Time.deltaTime;
+            }
+            else
+            {
+                _IsJumping = false;
+            }
+        }
+
+        if(_JumpIsReleased)
+        {
+            _IsJumping = false;
+        }
     }
 
     private void GroundCheck()
