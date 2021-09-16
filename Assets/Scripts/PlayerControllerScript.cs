@@ -17,9 +17,6 @@ public class PlayerControllerScript : MonoBehaviour
     private float _JumpTimer = 1.2f;
 
     [SerializeField]
-    private Transform _GroundCheck;
-
-    [SerializeField]
     private float _SlopeCheckDistance = 0.1f;
 
     [SerializeField]
