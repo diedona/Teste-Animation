@@ -20,9 +20,6 @@ public class MovingPlatformScript : MonoBehaviour
 
     private void Update()
     {
-        //transform.position = new Vector2(transform.position.x + _Speed * Time.deltaTime, transform.position.y);
-        Debug.Log($"currentPosition.x: {transform.position.x}");
-
         if(!IsAtDestiny())
             MoveToDestiny();        
         else
